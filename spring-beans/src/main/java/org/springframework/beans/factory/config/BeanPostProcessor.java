@@ -17,6 +17,8 @@
 package org.springframework.beans.factory.config;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.lang.Nullable;
 
 /**
@@ -54,6 +56,8 @@ public interface BeanPostProcessor {
 	 * if {@code null}, no subsequent BeanPostProcessors will be invoked
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet
+	 *
+	 * Bean生命周期：调用该方法后调用-> {@link InitializingBean#afterPropertiesSet()}
 	 */
 	@Nullable
 	default Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -80,6 +84,18 @@ public interface BeanPostProcessor {
 	 * @throws org.springframework.beans.BeansException in case of errors
 	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet
 	 * @see org.springframework.beans.factory.FactoryBean
+	 *
+	 * Bean生命周期：改方法设置Bean的作用域(singleton、prototype)
+	 * 	以下为sping的基本作用域
+	 * 		singleton：单例Bean只在容器中存在一个实例，在Spring内部通过HashMap来维护单例bean的缓存
+	 * 		prototype：每次索取bean时都会创建一个全新的Bean
+	 *
+	 *  以下为web应用环境的作用域，必须有web应用环境的支持
+	 *  	request：每次请求都会创建一个全新Bean，该类型作用于Web类型的Spring容器
+	 *  	session：每个会话创建一个全新Bean，该类型作用于Web类型的Spring容器
+	 *  	globalSession：类似于session作用域，只是其用于portlet环境的web应用。如果在非portlet环境将视为session作用域
+	 *
+	 *  调用完此方法 -> 容器关闭 -> 销毁Bean{@link DisposableBean#destroy()}
 	 */
 	@Nullable
 	default Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {

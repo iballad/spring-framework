@@ -49,6 +49,8 @@ public interface BeanFactoryAware extends Aware {
 	 * The bean can immediately call methods on the factory.
 	 * @throws BeansException in case of initialization errors
 	 * @see BeanInitializationException
+	 *
+	 * Bean生命周期：调用该接口 -> 然后调用{@link ApplicationContextAware#setApplicationContext()} -> 然后调用{@link org.springframework.beans.factory.config.BeanPostProcessor#postProcessBeforeInitialization(Object, String)}
 	 */
 	void setBeanFactory(BeanFactory beanFactory) throws BeansException;
 

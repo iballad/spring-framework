@@ -43,6 +43,8 @@ public interface InitializingBean {
 	 * exception in the event of misconfiguration.
 	 * @throws Exception in the event of misconfiguration (such
 	 * as failure to set an essential property) or if initialization fails.
+	 *
+	 * Bean生命周期：调用此方法然后调用 -> {@link org.springframework.beans.factory.config.BeanPostProcessor#postProcessAfterInitialization(Object, String)}
 	 */
 	void afterPropertiesSet() throws Exception;
 

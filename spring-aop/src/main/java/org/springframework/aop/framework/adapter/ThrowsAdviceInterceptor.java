@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -63,7 +63,7 @@ public class ThrowsAdviceInterceptor implements MethodInterceptor, AfterAdvice {
 
 	private final Object throwsAdvice;
 
-	/** Methods on throws advice, keyed by exception class */
+	/** Methods on throws advice, keyed by exception class. */
 	private final Map<Class<?>, Method> exceptionHandlerMap = new HashMap<>();
 
 
@@ -136,8 +136,8 @@ public class ThrowsAdviceInterceptor implements MethodInterceptor, AfterAdvice {
 			exceptionClass = exceptionClass.getSuperclass();
 			handler = this.exceptionHandlerMap.get(exceptionClass);
 		}
-		if (handler != null && logger.isDebugEnabled()) {
-			logger.debug("Found handler for exception of type [" + exceptionClass.getName() + "]: " + handler);
+		if (handler != null && logger.isTraceEnabled()) {
+			logger.trace("Found handler for exception of type [" + exceptionClass.getName() + "]: " + handler);
 		}
 		return handler;
 	}

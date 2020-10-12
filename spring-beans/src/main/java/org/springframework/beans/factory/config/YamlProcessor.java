@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,6 @@ package org.springframework.beans.factory.config;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,15 +25,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
-import org.yaml.snakeyaml.nodes.MappingNode;
-import org.yaml.snakeyaml.parser.ParserException;
 import org.yaml.snakeyaml.reader.UnicodeReader;
 
 import org.springframework.core.CollectionFactory;
@@ -68,15 +63,15 @@ public abstract class YamlProcessor {
 	/**
 	 * A map of document matchers allowing callers to selectively use only
 	 * some of the documents in a YAML resource. In YAML documents are
-	 * separated by <code>---<code> lines, and each document is converted
+	 * separated by {@code ---} lines, and each document is converted
 	 * to properties before the match is made. E.g.
 	 * <pre class="code">
 	 * environment: dev
-	 * url: http://dev.bar.com
+	 * url: https://dev.bar.com
 	 * name: Developer Setup
 	 * ---
 	 * environment: prod
-	 * url:http://foo.bar.com
+	 * url:https://foo.bar.com
 	 * name: My Cool App
 	 * </pre>
 	 * when mapped with
@@ -87,7 +82,7 @@ public abstract class YamlProcessor {
 	 * would end up as
 	 * <pre class="code">
 	 * environment=prod
-	 * url=http://foo.bar.com
+	 * url=https://foo.bar.com
 	 * name=My Cool App
 	 * </pre>
 	 */
@@ -161,8 +156,7 @@ public abstract class YamlProcessor {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Loading from YAML: " + resource);
 			}
-			Reader reader = new UnicodeReader(resource.getInputStream());
-			try {
+			try (Reader reader = new UnicodeReader(resource.getInputStream())) {
 				for (Object object : yaml.loadAll(reader)) {
 					if (object != null && process(asMap(object), callback)) {
 						count++;
@@ -175,9 +169,6 @@ public abstract class YamlProcessor {
 					logger.debug("Loaded " + count + " document" + (count > 1 ? "s" : "") +
 							" from YAML resource: " + resource);
 				}
-			}
-			finally {
-				reader.close();
 			}
 		}
 		catch (IOException ex) {
@@ -348,7 +339,7 @@ public abstract class YamlProcessor {
 
 
 	/**
-	 * Status returned from {@link DocumentMatcher#matches(java.util.Properties)}
+	 * Status returned from {@link DocumentMatcher#matches(java.util.Properties)}.
 	 */
 	public enum MatchStatus {
 
@@ -395,50 +386,6 @@ public abstract class YamlProcessor {
 		 * Take the first resource in the list that exists and use just that.
 		 */
 		FIRST_FOUND
-	}
-
-
-	/**
-	 * A specialized {@link Constructor} that checks for duplicate keys.
-	 * @deprecated as of Spring Framework 5.0.6 (not used anymore here),
-	 * superseded by SnakeYAML's own duplicate key handling
-	 */
-	@Deprecated
-	protected static class StrictMapAppenderConstructor extends Constructor {
-
-		// Declared as public for use in subclasses
-		public StrictMapAppenderConstructor() {
-			super();
-		}
-
-		@Override
-		protected Map<Object, Object> constructMapping(MappingNode node) {
-			try {
-				return super.constructMapping(node);
-			}
-			catch (IllegalStateException ex) {
-				throw new ParserException("while parsing MappingNode",
-						node.getStartMark(), ex.getMessage(), node.getEndMark());
-			}
-		}
-
-		@Override
-		protected Map<Object, Object> createDefaultMap() {
-			final Map<Object, Object> delegate = super.createDefaultMap();
-			return new AbstractMap<Object, Object>() {
-				@Override
-				public Object put(Object key, Object value) {
-					if (delegate.containsKey(key)) {
-						throw new IllegalStateException("Duplicate key: " + key);
-					}
-					return delegate.put(key, value);
-				}
-				@Override
-				public Set<Entry<Object, Object>> entrySet() {
-					return delegate.entrySet();
-				}
-			};
-		}
 	}
 
 }

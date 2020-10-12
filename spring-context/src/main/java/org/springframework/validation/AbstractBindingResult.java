@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,9 +52,9 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 
 	private final List<ObjectError> errors = new LinkedList<>();
 
-	private final Map<String, Class<?>> fieldTypes = new HashMap<>(0);
+	private final Map<String, Class<?>> fieldTypes = new HashMap<>();
 
-	private final Map<String, Object> fieldValues = new HashMap<>(0);
+	private final Map<String, Object> fieldValues = new HashMap<>();
 
 	private final Set<String> suppressedFields = new HashSet<>();
 
@@ -222,7 +222,7 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 		if (fieldError != null) {
 			Object value = fieldError.getRejectedValue();
 			// Do not apply formatting on binding failures like type mismatches.
-			return (fieldError.isBindingFailure() ? value : formatFieldValue(field, value));
+			return (fieldError.isBindingFailure() || getTarget() == null ? value : formatFieldValue(field, value));
 		}
 		else if (getTarget() != null) {
 			Object value = getActualFieldValue(fixedField(field));
@@ -360,7 +360,7 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		if (this == other) {
 			return true;
 		}

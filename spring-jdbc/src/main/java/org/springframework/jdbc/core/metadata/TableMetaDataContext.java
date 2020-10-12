@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,11 +17,13 @@
 package org.springframework.jdbc.core.metadata;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
@@ -253,6 +255,7 @@ public class TableMetaDataContext {
 					for (Map.Entry<String, ?> entry : inParameters.entrySet()) {
 						if (column.equalsIgnoreCase(entry.getKey())) {
 							value = entry.getValue();
+							break;
 						}
 					}
 				}
@@ -293,8 +296,8 @@ public class TableMetaDataContext {
 		insertStatement.append(") VALUES(");
 		if (columnCount < 1) {
 			if (this.generatedKeyColumnsUsed) {
-				if (logger.isInfoEnabled()) {
-					logger.info("Unable to locate non-key columns for table '" +
+				if (logger.isDebugEnabled()) {
+					logger.debug("Unable to locate non-key columns for table '" +
 							getTableName() + "' so an empty insert statement is generated");
 				}
 			}
@@ -303,12 +306,8 @@ public class TableMetaDataContext {
 						getTableName() + "' so an insert statement can't be generated");
 			}
 		}
-		for (int i = 0; i < columnCount; i++) {
-			if (i > 0) {
-				insertStatement.append(", ");
-			}
-			insertStatement.append("?");
-		}
+		String params = String.join(", ", Collections.nCopies(columnCount, "?"));
+		insertStatement.append(params);
 		insertStatement.append(")");
 		return insertStatement.toString();
 	}

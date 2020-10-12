@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,7 +40,9 @@ import org.springframework.web.server.ServerWebExchange;
  *
  * @author Rossen Stoyanchev
  * @since 5.0
+ * @deprecated as of 5.1, in favor of using {@link EncodedResourceResolver}
  */
+@Deprecated
 public class GzipResourceResolver extends AbstractResourceResolver {
 
 	@Override
@@ -57,7 +59,8 @@ public class GzipResourceResolver extends AbstractResourceResolver {
 							}
 						}
 						catch (IOException ex) {
-							logger.trace("No gzip resource for [" + resource.getFilename() + "]", ex);
+							String logPrefix = exchange != null ? exchange.getLogPrefix() : "";
+							logger.trace(logPrefix + "No gzip resource for [" + resource.getFilename() + "]", ex);
 						}
 					}
 					return resource;
@@ -162,6 +165,7 @@ public class GzipResourceResolver extends AbstractResourceResolver {
 			HttpHeaders headers = (this.original instanceof HttpResource ?
 					((HttpResource) this.original).getResponseHeaders() : new HttpHeaders());
 			headers.add(HttpHeaders.CONTENT_ENCODING, "gzip");
+			headers.add(HttpHeaders.VARY, HttpHeaders.ACCEPT_ENCODING);
 			return headers;
 		}
 	}

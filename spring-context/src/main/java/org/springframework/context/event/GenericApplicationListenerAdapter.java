@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,8 @@
 
 package org.springframework.context.event;
 
+import java.util.Map;
+
 import org.springframework.aop.support.AopUtils;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
@@ -23,6 +25,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ConcurrentReferenceHashMap;
 
 /**
  * {@link GenericApplicationListener} adapter that determines supported event types
@@ -34,6 +37,9 @@ import org.springframework.util.Assert;
  * @see org.springframework.context.ApplicationListener#onApplicationEvent
  */
 public class GenericApplicationListenerAdapter implements GenericApplicationListener, SmartApplicationListener {
+
+	private static final Map<Class<?>, ResolvableType> eventTypeCache = new ConcurrentReferenceHashMap<>();
+
 
 	private final ApplicationListener<ApplicationEvent> delegate;
 
@@ -101,8 +107,12 @@ public class GenericApplicationListenerAdapter implements GenericApplicationList
 
 	@Nullable
 	static ResolvableType resolveDeclaredEventType(Class<?> listenerType) {
-		ResolvableType resolvableType = ResolvableType.forClass(listenerType).as(ApplicationListener.class);
-		return (resolvableType.hasGenerics() ? resolvableType.getGeneric() : null);
+		ResolvableType eventType = eventTypeCache.get(listenerType);
+		if (eventType == null) {
+			eventType = ResolvableType.forClass(listenerType).as(ApplicationListener.class).getGeneric();
+			eventTypeCache.put(listenerType, eventType);
+		}
+		return (eventType != ResolvableType.NONE ? eventType : null);
 	}
 
 }

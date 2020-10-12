@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,6 +29,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 import org.springframework.lang.Nullable;
+import org.springframework.orm.jpa.EntityManagerHolder;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
@@ -86,6 +87,7 @@ public class SpringSessionContext implements CurrentSessionContext {
 			return (Session) value;
 		}
 		else if (value instanceof SessionHolder) {
+			// HibernateTransactionManager
 			SessionHolder sessionHolder = (SessionHolder) value;
 			Session session = sessionHolder.getSession();
 			if (!sessionHolder.isSynchronizedWithTransaction() &&
@@ -103,6 +105,10 @@ public class SpringSessionContext implements CurrentSessionContext {
 				}
 			}
 			return session;
+		}
+		else if (value instanceof EntityManagerHolder) {
+			// JpaTransactionManager
+			return ((EntityManagerHolder) value).getEntityManager().unwrap(Session.class);
 		}
 
 		if (this.transactionManager != null && this.jtaSessionContext != null) {

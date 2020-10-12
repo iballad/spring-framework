@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -76,13 +76,13 @@ class ReactiveTypeHandler {
 
 	private static Log logger = LogFactory.getLog(ReactiveTypeHandler.class);
 
-	private final ReactiveAdapterRegistry reactiveRegistry;
+	private final ReactiveAdapterRegistry adapterRegistry;
 
 	private final TaskExecutor taskExecutor;
 
-	private Boolean taskExecutorWarning;
-
 	private final ContentNegotiationManager contentNegotiationManager;
+
+	private boolean taskExecutorWarning;
 
 
 	public ReactiveTypeHandler() {
@@ -93,10 +93,12 @@ class ReactiveTypeHandler {
 		Assert.notNull(registry, "ReactiveAdapterRegistry is required");
 		Assert.notNull(executor, "TaskExecutor is required");
 		Assert.notNull(manager, "ContentNegotiationManager is required");
-		this.reactiveRegistry = registry;
+		this.adapterRegistry = registry;
 		this.taskExecutor = executor;
-		this.taskExecutorWarning = executor instanceof SimpleAsyncTaskExecutor || executor instanceof SyncTaskExecutor;
 		this.contentNegotiationManager = manager;
+
+		this.taskExecutorWarning =
+				(executor instanceof SimpleAsyncTaskExecutor || executor instanceof SyncTaskExecutor);
 	}
 
 
@@ -104,26 +106,26 @@ class ReactiveTypeHandler {
 	 * Whether the type can be adapted to a Reactive Streams {@link Publisher}.
 	 */
 	public boolean isReactiveType(Class<?> type) {
-		return (this.reactiveRegistry.hasAdapters() && this.reactiveRegistry.getAdapter(type) != null);
+		return (this.adapterRegistry.getAdapter(type) != null);
 	}
 
 
 	/**
 	 * Process the given reactive return value and decide whether to adapt it
 	 * to a {@link ResponseBodyEmitter} or a {@link DeferredResult}.
-	 * @return an emitter for streaming or {@code null} if handled internally
-	 * with a {@link DeferredResult}.
+	 * @return an emitter for streaming, or {@code null} if handled internally
+	 * with a {@link DeferredResult}
 	 */
 	@Nullable
 	public ResponseBodyEmitter handleValue(Object returnValue, MethodParameter returnType,
 			ModelAndViewContainer mav, NativeWebRequest request) throws Exception {
 
 		Assert.notNull(returnValue, "Expected return value");
-		ReactiveAdapter adapter = this.reactiveRegistry.getAdapter(returnValue.getClass());
-		Assert.state(adapter != null, "Unexpected return value: " + returnValue);
+		ReactiveAdapter adapter = this.adapterRegistry.getAdapter(returnValue.getClass());
+		Assert.state(adapter != null, () -> "Unexpected return value: " + returnValue);
 
 		ResolvableType elementType = ResolvableType.forMethodParameter(returnType).getGeneric();
-		Class<?> elementClass = elementType.resolve(Object.class);
+		Class<?> elementClass = elementType.toClass();
 
 		Collection<MediaType> mediaTypes = getMediaTypes(request);
 		Optional<MediaType> mediaType = mediaTypes.stream().filter(MimeType::isConcrete).findFirst();
@@ -237,12 +239,9 @@ class ReactiveTypeHandler {
 		@Override
 		public final void onSubscribe(Subscription subscription) {
 			this.subscription = subscription;
-			if (logger.isDebugEnabled()) {
-				logger.debug("Subscribed to Publisher for " + this.emitter);
-			}
 			this.emitter.onTimeout(() -> {
-				if (logger.isDebugEnabled()) {
-					logger.debug("Connection timed out for " + this.emitter);
+				if (logger.isTraceEnabled()) {
+					logger.trace("Connection timeout for " + this.emitter);
 				}
 				terminate();
 				this.emitter.complete();
@@ -310,27 +309,27 @@ class ReactiveTypeHandler {
 					this.subscription.request(1);
 				}
 				catch (final Throwable ex) {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Send error for " + this.emitter, ex);
+					if (logger.isTraceEnabled()) {
+						logger.trace("Send for " + this.emitter + " failed: " + ex);
 					}
 					terminate();
 					return;
 				}
 			}
-			
+
 			if (isTerminated) {
 				this.done = true;
 				Throwable ex = this.error;
 				this.error = null;
 				if (ex != null) {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Publisher error for " + this.emitter, ex);
+					if (logger.isTraceEnabled()) {
+						logger.trace("Publisher for " + this.emitter + " failed: " + ex);
 					}
 					this.emitter.completeWithError(ex);
 				}
 				else {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Publishing completed for " + this.emitter);
+					if (logger.isTraceEnabled()) {
+						logger.trace("Publisher for " + this.emitter + " completed");
 					}
 					this.emitter.complete();
 				}

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,6 +28,9 @@ import org.springframework.util.Assert;
  * {@link JpaTransactionManager} binds instances of this class to the thread,
  * for a given {@link javax.persistence.EntityManagerFactory}.
  *
+ * <p>Also serves as a base class for {@link org.springframework.orm.hibernate5.SessionHolder},
+ * as of 5.1.
+ *
  * <p>Note: This is an SPI class, not intended to be used by applications.
  *
  * @author Juergen Hoeller
@@ -37,6 +40,7 @@ import org.springframework.util.Assert;
  */
 public class EntityManagerHolder extends ResourceHolderSupport {
 
+	@Nullable
 	private final EntityManager entityManager;
 
 	private boolean transactionActive;
@@ -45,13 +49,13 @@ public class EntityManagerHolder extends ResourceHolderSupport {
 	private SavepointManager savepointManager;
 
 
-	public EntityManagerHolder(EntityManager entityManager) {
-		Assert.notNull(entityManager, "EntityManager must not be null");
+	public EntityManagerHolder(@Nullable EntityManager entityManager) {
 		this.entityManager = entityManager;
 	}
 
 
 	public EntityManager getEntityManager() {
+		Assert.state(this.entityManager != null, "No EntityManager available");
 		return this.entityManager;
 	}
 

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,10 +31,10 @@ import org.springframework.lang.Nullable;
 public class BeanDefinitionStoreException extends FatalBeanException {
 
 	@Nullable
-	private String resourceDescription;
+	private final String resourceDescription;
 
 	@Nullable
-	private String beanName;
+	private final String beanName;
 
 
 	/**
@@ -43,6 +43,8 @@ public class BeanDefinitionStoreException extends FatalBeanException {
 	 */
 	public BeanDefinitionStoreException(String msg) {
 		super(msg);
+		this.resourceDescription = null;
+		this.beanName = null;
 	}
 
 	/**
@@ -52,6 +54,8 @@ public class BeanDefinitionStoreException extends FatalBeanException {
 	 */
 	public BeanDefinitionStoreException(String msg, @Nullable Throwable cause) {
 		super(msg, cause);
+		this.resourceDescription = null;
+		this.beanName = null;
 	}
 
 	/**
@@ -62,6 +66,7 @@ public class BeanDefinitionStoreException extends FatalBeanException {
 	public BeanDefinitionStoreException(@Nullable String resourceDescription, String msg) {
 		super(msg);
 		this.resourceDescription = resourceDescription;
+		this.beanName = null;
 	}
 
 	/**
@@ -73,6 +78,7 @@ public class BeanDefinitionStoreException extends FatalBeanException {
 	public BeanDefinitionStoreException(@Nullable String resourceDescription, String msg, @Nullable Throwable cause) {
 		super(msg, cause);
 		this.resourceDescription = resourceDescription;
+		this.beanName = null;
 	}
 
 	/**

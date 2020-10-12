@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,6 +28,8 @@ import io.undertow.server.DefaultByteBufferPool;
 import io.undertow.websockets.client.WebSocketClient.ConnectionBuilder;
 import io.undertow.websockets.client.WebSocketClientNegotiation;
 import io.undertow.websockets.core.WebSocketChannel;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.xnio.IoFuture;
 import org.xnio.XnioWorker;
 import reactor.core.publisher.Mono;
@@ -50,7 +52,9 @@ import org.springframework.web.reactive.socket.adapter.UndertowWebSocketSession;
  * @author Rossen Stoyanchev
  * @since 5.0
  */
-public class UndertowWebSocketClient extends WebSocketClientSupport implements WebSocketClient {
+public class UndertowWebSocketClient implements WebSocketClient {
+
+	private static final Log logger = LogFactory.getLog(UndertowWebSocketClient.class);
 
 	private static final int DEFAULT_POOL_BUFFER_SIZE = 8192;
 
@@ -66,7 +70,7 @@ public class UndertowWebSocketClient extends WebSocketClientSupport implements W
 
 	/**
 	 * Constructor with the {@link XnioWorker} to pass to
-	 * {@link io.undertow.websockets.client.WebSocketClient#connectionBuilder}
+	 * {@link io.undertow.websockets.client.WebSocketClient#connectionBuilder}.
 	 * @param worker the Xnio worker
 	 */
 	public UndertowWebSocketClient(XnioWorker worker) {
@@ -112,9 +116,10 @@ public class UndertowWebSocketClient extends WebSocketClientSupport implements W
 	/**
 	 * Set the {@link io.undertow.connector.ByteBufferPool ByteBufferPool} to pass to
 	 * {@link io.undertow.websockets.client.WebSocketClient#connectionBuilder}.
-	 * <p>By default an indirect {@link io.undertow.server.DefaultByteBufferPool} with a buffer size
-	 * of {@value #DEFAULT_POOL_BUFFER_SIZE} is used.
+	 * <p>By default an indirect {@link io.undertow.server.DefaultByteBufferPool}
+	 * with a buffer size of 8192 is used.
 	 * @since 5.0.8
+	 * @see #DEFAULT_POOL_BUFFER_SIZE
 	 */
 	public void setByteBufferPool(ByteBufferPool byteBufferPool) {
 		Assert.notNull(byteBufferPool, "ByteBufferPool must not be null");
@@ -122,8 +127,9 @@ public class UndertowWebSocketClient extends WebSocketClientSupport implements W
 	}
 
 	/**
-	 * @return the {@link io.undertow.connector.ByteBufferPool} currently used
-	 * for newly created WebSocket sessions by this client
+	 * Return the {@link io.undertow.connector.ByteBufferPool} currently used
+	 * for newly created WebSocket sessions by this client.
+	 * @return the byte buffer pool
 	 * @since 5.0.8
 	 */
 	public ByteBufferPool getByteBufferPool() {
@@ -131,33 +137,10 @@ public class UndertowWebSocketClient extends WebSocketClientSupport implements W
 	}
 
 	/**
-	 * Return the configured {@code Consumer<ConnectionBuilder}.
+	 * Return the configured <code>Consumer&lt;ConnectionBuilder&gt;</code>.
 	 */
 	public Consumer<ConnectionBuilder> getConnectionBuilderConsumer() {
 		return this.builderConsumer;
-	}
-
-	/**
-	 * Configure the size of the {@link io.undertow.connector.ByteBufferPool
-	 * ByteBufferPool} to pass to
-	 * {@link io.undertow.websockets.client.WebSocketClient#connectionBuilder}.
-	 * <p>By default the buffer size is set to {@value #DEFAULT_POOL_BUFFER_SIZE}.
-	 * @deprecated as of 5.0.8 this method is deprecated in favor
-	 * of {@link #setByteBufferPool(io.undertow.connector.ByteBufferPool)}
-	 */
-	@Deprecated
-	public void setPoolBufferSize(int poolBufferSize) {
-		this.byteBufferPool = new DefaultByteBufferPool(false, poolBufferSize);
-	}
-
-	/**
-	 * Return the size for Undertow's WebSocketClient {@code ByteBufferPool}.
-	 * @deprecated as of 5.0.8 this method is deprecated in favor
-	 * of using {@link #getByteBufferPool()}
-	 */
-	@Deprecated
-	public int getPoolBufferSize() {
-		return getByteBufferPool().getBufferSize();
 	}
 
 
@@ -175,8 +158,11 @@ public class UndertowWebSocketClient extends WebSocketClientSupport implements W
 		MonoProcessor<Void> completion = MonoProcessor.create();
 		return Mono.fromCallable(
 				() -> {
+					if (logger.isDebugEnabled()) {
+						logger.debug("Connecting to " + url);
+					}
+					List<String> protocols = handler.getSubProtocols();
 					ConnectionBuilder builder = createConnectionBuilder(url);
-					List<String> protocols = beforeHandshake(url, headers, handler);
 					DefaultNegotiation negotiation = new DefaultNegotiation(protocols, headers, builder);
 					builder.setClientNegotiation(negotiation);
 					return builder.connect().addNotifier(
@@ -187,7 +173,7 @@ public class UndertowWebSocketClient extends WebSocketClientSupport implements W
 								}
 								@Override
 								public void handleFailed(IOException ex, Object attachment) {
-									completion.onError(new IllegalStateException("Failed to connect", ex));
+									completion.onError(new IllegalStateException("Failed to connect to " + url, ex));
 								}
 							}, null);
 				})
@@ -211,14 +197,22 @@ public class UndertowWebSocketClient extends WebSocketClientSupport implements W
 	private void handleChannel(URI url, WebSocketHandler handler, MonoProcessor<Void> completion,
 			DefaultNegotiation negotiation, WebSocketChannel channel) {
 
-		HandshakeInfo info = afterHandshake(url, negotiation.getResponseHeaders());
-		UndertowWebSocketSession session = new UndertowWebSocketSession(channel, info, bufferFactory, completion);
+		HandshakeInfo info = createHandshakeInfo(url, negotiation);
+		UndertowWebSocketSession session = new UndertowWebSocketSession(channel, info, this.bufferFactory, completion);
 		UndertowWebSocketHandlerAdapter adapter = new UndertowWebSocketHandlerAdapter(session);
 
 		channel.getReceiveSetter().set(adapter);
 		channel.resumeReceives();
 
-		handler.handle(session).subscribe(session);
+		handler.handle(session)
+				.checkpoint(url + " [UndertowWebSocketClient]")
+				.subscribe(session);
+	}
+
+	private HandshakeInfo createHandshakeInfo(URI url, DefaultNegotiation negotiation) {
+		HttpHeaders responseHeaders = negotiation.getResponseHeaders();
+		String protocol = responseHeaders.getFirst("Sec-WebSocket-Protocol");
+		return new HandshakeInfo(url, responseHeaders, Mono.empty(), protocol);
 	}
 
 

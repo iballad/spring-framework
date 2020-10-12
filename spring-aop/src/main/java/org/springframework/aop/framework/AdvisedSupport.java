@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -60,7 +60,7 @@ import org.springframework.util.CollectionUtils;
  */
 public class AdvisedSupport extends ProxyConfig implements Advised {
 
-	/** use serialVersionUID from Spring 2.0 for interoperability */
+	/** use serialVersionUID from Spring 2.0 for interoperability. */
 	private static final long serialVersionUID = 2651364800145442165L;
 
 
@@ -71,16 +71,16 @@ public class AdvisedSupport extends ProxyConfig implements Advised {
 	public static final TargetSource EMPTY_TARGET_SOURCE = EmptyTargetSource.INSTANCE;
 
 
-	/** Package-protected to allow direct access for efficiency */
+	/** Package-protected to allow direct access for efficiency. */
 	TargetSource targetSource = EMPTY_TARGET_SOURCE;
 
-	/** Whether the Advisors are already filtered for the specific target class */
+	/** Whether the Advisors are already filtered for the specific target class. */
 	private boolean preFiltered = false;
 
-	/** The AdvisorChainFactory to use */
+	/** The AdvisorChainFactory to use. */
 	AdvisorChainFactory advisorChainFactory = new DefaultAdvisorChainFactory();
 
-	/** Cache with Method as key and advisor chain List as value */
+	/** Cache with Method as key and advisor chain List as value. */
 	private transient Map<MethodCacheKey, List<Object>> methodCache;
 
 	/**
@@ -592,7 +592,7 @@ public class AdvisedSupport extends ProxyConfig implements Advised {
 		}
 
 		@Override
-		public boolean equals(Object other) {
+		public boolean equals(@Nullable Object other) {
 			return (this == other || (other instanceof MethodCacheKey &&
 					this.method == ((MethodCacheKey) other).method));
 		}

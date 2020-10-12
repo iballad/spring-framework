@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,6 +15,7 @@
  */
 package org.springframework.web.reactive.socket;
 
+import java.util.Map;
 import java.util.function.Function;
 
 import org.reactivestreams.Publisher;
@@ -51,6 +52,13 @@ public interface WebSocketSession {
 	 * @return the buffer factory for the session
 	 */
 	DataBufferFactory bufferFactory();
+
+	/**
+	 * Return the map with attributes associated with the WebSocket session.
+	 * @return a Map with the session attributes (never {@code null})
+	 * @since 5.1
+	 */
+	Map<String, Object> getAttributes();
 
 	/**
 	 * Provides access to the stream of inbound messages.

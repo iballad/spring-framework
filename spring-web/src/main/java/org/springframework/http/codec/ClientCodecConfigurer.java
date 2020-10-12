@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,33 @@ import org.springframework.core.codec.Encoder;
 /**
  * Extension of {@link CodecConfigurer} for HTTP message reader and writer
  * options relevant on the client side.
+ *
+ * <p>HTTP message readers for the following are registered by default:
+ * <ul>{@code byte[]}
+ * <li>{@link java.nio.ByteBuffer}
+ * <li>{@link org.springframework.core.io.buffer.DataBuffer DataBuffer}
+ * <li>{@link org.springframework.core.io.Resource Resource}
+ * <li>{@link String}
+ * <li>{@link org.springframework.util.MultiValueMap
+ * MultiValueMap&lt;String,String&gt;} for form data
+ * <li>JSON and Smile, if Jackson is present
+ * <li>XML, if JAXB2 is present
+ * <li>Server-Sent Events
+ * </ul>
+ *
+ * <p>HTTP message writers registered by default:
+ * <ul>{@code byte[]}
+ * <li>{@link java.nio.ByteBuffer}
+ * <li>{@link org.springframework.core.io.buffer.DataBuffer DataBuffer}
+ * <li>{@link org.springframework.core.io.Resource Resource}
+ * <li>{@link String}
+ * <li>{@link org.springframework.util.MultiValueMap
+ * MultiValueMap&lt;String,String&gt;} for form data
+ * <li>{@link org.springframework.util.MultiValueMap
+ * MultiValueMap&lt;String,Object&gt;} for multipart data
+ * <li>JSON and Smile, if Jackson is present
+ * <li>XML, if JAXB2 is present
+ * </ul>
  *
  * @author Rossen Stoyanchev
  * @since 5.0
